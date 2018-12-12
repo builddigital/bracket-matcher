@@ -38,6 +38,9 @@ class BracketMatcherView
     @subscriptions.add atom.commands.add editorElement, 'bracket-matcher:select-inside-brackets', =>
       @selectInsidePair()
 
+    @subscriptions.add atom.commands.add editorElement, 'bracket-matcher:select-around-brackets', =>
+      @selectAroundPair()
+
     @subscriptions.add atom.commands.add editorElement, 'bracket-matcher:close-tag', =>
       @closeTag()
 
@@ -291,6 +294,40 @@ class BracketMatcherView
 
       startPosition = startRange.end
       endPosition = endRange.start
+    else
+      if startPosition = @findAnyStartPair(@editor.getCursorBufferPosition())
+        startPair = @editor.getTextInRange(Range.fromPointWithDelta(startPosition, 0, 1))
+        endPosition = @findMatchingEndPair(startPosition, startPair, @matchManager.pairedCharacters[startPair])
+        startPosition = startPosition.traverse([0, 1])
+      else if pair = @tagFinder.findStartEndTags(true)
+        # NOTE: findEnclosingTags is not used as it has a scope check
+        # that will fail on very long lines
+        {startRange, endRange} = pair
+        if startRange.compare(endRange) > 0
+          [startRange, endRange] = [endRange, startRange]
+
+        startPosition = startRange.end
+        endPosition = endRange.start
+
+    if startPosition? and endPosition?
+      rangeToSelect = new Range(startPosition, endPosition)
+      @editor.setSelectedBufferRange(rangeToSelect)
+
+  selectAroundPair: ->
+    if @pairHighlighted
+      startRange = @startMarker.getBufferRange()
+      endRange = @endMarker.getBufferRange()
+
+      if @tagHighlighted
+        # NOTE: findEnclosingTags is not used as it has a scope check
+        # that will fail on very long lines
+        {startRange, endRange} = @tagFinder.findStartEndTags(true)
+
+      if startRange.compare(endRange) > 0
+        [startRange, endRange] = [endRange, startRange]
+
+      startPosition = startRange.start
+      endPosition = endRange.end
     else
       if startPosition = @findAnyStartPair(@editor.getCursorBufferPosition())
         startPair = @editor.getTextInRange(Range.fromPointWithDelta(startPosition, 0, 1))

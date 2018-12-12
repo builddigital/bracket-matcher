@@ -4,6 +4,7 @@
 
 '.platform-darwin atom-text-editor':
   'ctrl-cmd-m': 'bracket-matcher:select-inside-brackets'
+  'ctrl-shift-m': 'bracket-matcher:select-around-brackets'
   'alt-cmd-.': 'bracket-matcher:close-tag'
   'ctrl-backspace': 'bracket-matcher:remove-matching-brackets'
 
